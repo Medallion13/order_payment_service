@@ -13,26 +13,30 @@ Globals:
       - x86_64
 
 Resources:
-  OrderApiFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: services/functions/order_event
-      Handler: order_event_lambda
-
   OrderEventFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: services/functions/order_api
-      Handler: order_api_lambda
+      FunctionName: Order_Event_Lambda
+      CodeUri: services/functions/order_event
+      Handler: order_event_lambda
 
-  PaymentApiFunction:
+  OrderApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: services/functions/payment_event
-      Handler: payment_event_lambda
+      FunctionName: Order_API_Lambda
+      CodeUri: services/functions/order_api
+      Handler: order_api_lambda
 
   PaymentEventFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: Payment_Event_Lambda
+      CodeUri: services/functions/payment_event
+      Handler: payment_event_lambda
+
+  PaymentApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Payment_API_Lambda
       CodeUri: services/functions/payment_api
       Handler: payment_api_lambda
