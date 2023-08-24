@@ -16,8 +16,8 @@ Resources:
   OrderApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: order_lambdas/event_lambda
-      Handler: event_lambda
+      CodeUri: services/functions/order_event
+      Handler: order_event_lambda
 
   # PaymentApiFunction:
   #   Type: AWS::Serverless::Function
