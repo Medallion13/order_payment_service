@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  Code to deploy aws infrastructure for 2 microservices
+  focus in order and payment services
+
+Globals:
+  Function:
+    Runtime: go1.x
+    Timeout: 3
+    Architectures:
+      - x86_64
+
+Resources:
+  OrderApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: order_lambdas/event_lambda
+      Handler: event_lambda
+
+  # PaymentApiFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties
+
+  # OrderEventFunction:
+  #   Type: AWS::Serverless::Function
+
+  # PaymentEventFunction:
+  #   Type: AWS::Serverless::Function
