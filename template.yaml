@@ -128,7 +128,7 @@ Resources:
 Outputs:
   OrderApi:
     Description: 'API Gateway endpoint URL for dev stage for order function'
-    Value: !Sub 'https:://${APIGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Dev/order'
+    Value: !Sub 'https://${APIGatewayApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Dev/order/'
   paymentApi:
     Description: 'API Gateway endpoint URL for dev stage for payment function'
-    Value: !Sub 'https:://${APIGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Dev/payment'
+    Value: !Sub 'https://${APIGatewayApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Dev/payment/'
