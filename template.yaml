@@ -5,6 +5,13 @@ Description: >
   Code to deploy aws infrastructure for 2 microservices
   focus in order and payment services
 
+# Global Parameters to easy changes in future
+Parameters:
+  EventBusName:
+    Type: String
+    Description: Event bus name
+    Default: 'default'
+
 Globals:
   # base configuration for all lambdas
   Function:
@@ -48,19 +55,13 @@ Resources:
               type: string
 
   # Deploy all the functions
-  OrderEventFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: Order_Event_Lambda
-      CodeUri: services/functions/order_event
-      Handler: order_event_lambda
-
   OrderApiFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: Order_API_Lambda
       CodeUri: services/functions/order_api
       Handler: order_api_lambda
+      # Configuration of api method and access to lambda
       Events:
         ApiEvent:
           Type: Api
@@ -72,6 +73,48 @@ Resources:
               Model: Order
               Required: true
               ValidateBody: true
+      # Policy statements for evenBridge use
+      Policies:
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref EventBusName
+      # Environment variables
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref EventBusName
+
+  PaymentApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Payment_API_Lambda
+      CodeUri: services/functions/payment_api
+      Handler: payment_api_lambda
+      # Configuration of api method and access to lambda
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: APIGatewayApi
+            Path: /payment
+            Method: POST
+            RequestModel:
+              Model: Payment
+              Required: true
+              ValidateBody: true
+      # Policy statements for evenBridge use
+      Policies:
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref EventBusName
+      # Environment variables
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref EventBusName
+
+  OrderEventFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Order_Event_Lambda
+      CodeUri: services/functions/order_event
+      Handler: order_event_lambda
 
   PaymentEventFunction:
     Type: AWS::Serverless::Function
@@ -80,9 +123,10 @@ Resources:
       CodeUri: services/functions/payment_event
       Handler: payment_event_lambda
 
-  PaymentApiFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: Payment_API_Lambda
-      CodeUri: services/functions/payment_api
-      Handler: payment_api_lambda
+Outputs:
+  OrderApi:
+    Description: 'API Gateway endpoint URL for dev stage for order function'
+    Value: !Sub 'https:://${APIGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Dev/order'
+  paymentApi:
+    Description: 'API Gateway endpoint URL for dev stage for payment function'
+    Value: !Sub 'https:://${APIGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Dev/payment'
