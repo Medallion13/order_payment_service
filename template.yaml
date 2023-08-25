@@ -25,6 +25,7 @@ Resources:
   APIGatewayApi:
     Type: AWS::Serverless::Api
     Properties:
+      Name: 'microservices_API'
       StageName: Dev
       Models:
         Order:
@@ -117,6 +118,17 @@ Resources:
       FunctionName: Order_Event_Lambda
       CodeUri: services/functions/order_event
       Handler: order_event_lambda
+      Events:
+        Trigger:
+          Type: EventBridgeRule
+          Properties:
+            RuleName: payment_to_order_rule
+            Pattern:
+              source:
+                - custom.PaymentApiFunction
+            RetryPolicy:
+              MaximumRetryAttempts: 5
+              MaximumEventAgeInSeconds: 120
 
   PaymentEventFunction:
     Type: AWS::Serverless::Function
@@ -124,6 +136,17 @@ Resources:
       FunctionName: Payment_Event_Lambda
       CodeUri: services/functions/payment_event
       Handler: payment_event_lambda
+      Events:
+        Trigger:
+          Type: EventBridgeRule
+          Properties:
+            RuleName: order_to_payment_rule
+            Pattern:
+              source:
+                - custom.OrderApiFunction
+            RetryPolicy:
+              MaximumRetryAttempts: 5
+              MaximumEventAgeInSeconds: 120
 
 Outputs:
   OrderApi:
