@@ -5,34 +5,86 @@ Description: >
   Code to deploy aws infrastructure for 2 microservices
   focus in order and payment services
 
+# Global Parameters to easy changes in future
+Parameters:
+  EventBusName:
+    Type: String
+    Description: Event bus name
+    Default: 'default'
+
 Globals:
+  # base configuration for all lambdas
   Function:
     Runtime: go1.x
-    Timeout: 3
+    Timeout: 5
     Architectures:
       - x86_64
 
 Resources:
-  OrderEventFunction:
-    Type: AWS::Serverless::Function
+  # Configuration for API
+  APIGatewayApi:
+    Type: AWS::Serverless::Api
     Properties:
-      FunctionName: Order_Event_Lambda
-      CodeUri: services/functions/order_event
-      Handler: order_event_lambda
+      Name: 'microservices_API'
+      StageName: Dev
+      Models:
+        Order:
+          type: object
+          required:
+            - UserID
+            - Item
+            - Quantity
+            - TotalPrice
+          properties:
+            UserID:
+              type: string
+            Item:
+              type: string
+            Quantity:
+              type: integer
+            TotalPrice:
+              type: number
+        Payment:
+          type: object
+          required:
+            - OrderID
+            - Status
+          properties:
+            OrderID:
+              Type: string
+            Status:
+              type: string
 
+  # Deploy all the functions
   OrderApiFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: Order_API_Lambda
       CodeUri: services/functions/order_api
       Handler: order_api_lambda
-
-  PaymentEventFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: Payment_Event_Lambda
-      CodeUri: services/functions/payment_event
-      Handler: payment_event_lambda
+      # Configuration of api method and access to lambda
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: APIGatewayApi
+            Path: /order
+            Method: POST
+            RequestModel:
+              Model: Order
+              Required: true
+              ValidateBody: true
+      # Policy statements for evenBridge use
+      Policies:
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref EventBusName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrderTable
+      # Environment variables
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref EventBusName
 
   PaymentApiFunction:
     Type: AWS::Serverless::Function
@@ -40,3 +92,99 @@ Resources:
       FunctionName: Payment_API_Lambda
       CodeUri: services/functions/payment_api
       Handler: payment_api_lambda
+      # Configuration of api method and access to lambda
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: APIGatewayApi
+            Path: /payment
+            Method: POST
+            RequestModel:
+              Model: Payment
+              Required: true
+              ValidateBody: true
+      # Policy statements for evenBridge use
+      Policies:
+        - EventBridgePutEventsPolicy:
+            EventBusName: !Ref EventBusName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PaymentTable
+      # Environment variables
+      Environment:
+        Variables:
+          EVENT_BUS_NAME: !Ref EventBusName
+
+  OrderEventFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Order_Event_Lambda
+      CodeUri: services/functions/order_event
+      Handler: order_event_lambda
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrderTable
+      Events:
+        Trigger:
+          Type: EventBridgeRule
+          Properties:
+            RuleName: payment_to_order_rule
+            Pattern:
+              source:
+                - custom.PaymentApiFunction
+            RetryPolicy:
+              MaximumRetryAttempts: 5
+              MaximumEventAgeInSeconds: 120
+
+  PaymentEventFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: Payment_Event_Lambda
+      CodeUri: services/functions/payment_event
+      Handler: payment_event_lambda
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PaymentTable
+      Events:
+        Trigger:
+          Type: EventBridgeRule
+          Properties:
+            RuleName: order_to_payment_rule
+            Pattern:
+              source:
+                - custom.OrderApiFunction
+            RetryPolicy:
+              MaximumRetryAttempts: 5
+              MaximumEventAgeInSeconds: 120
+
+  # Simple tables in DynamoDB
+  OrderTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: OrderTable
+      PrimaryKey:
+        Name: OrderID
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  PaymentTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: PaymentTable
+      PrimaryKey:
+        Name: PaymentID
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+Outputs:
+  OrderApi:
+    Description: 'API Gateway endpoint URL for dev stage for order function'
+    Value: !Sub 'https://${APIGatewayApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Dev/order/'
+  paymentApi:
+    Description: 'API Gateway endpoint URL for dev stage for payment function'
+    Value: !Sub 'https://${APIGatewayApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Dev/payment/'
