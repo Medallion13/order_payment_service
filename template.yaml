@@ -6,13 +6,48 @@ Description: >
   focus in order and payment services
 
 Globals:
+  # base configuration for all lambdas
   Function:
     Runtime: go1.x
-    Timeout: 3
+    Timeout: 5
     Architectures:
       - x86_64
 
 Resources:
+  # Configuration for API
+  APIGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Dev
+      Models:
+        Order:
+          type: object
+          required:
+            - UserID
+            - Item
+            - Quantity
+            - TotalPrice
+          properties:
+            UserID:
+              type: string
+            Item:
+              type: string
+            Quantity:
+              type: integer
+            TotalPrice:
+              type: number
+        Payment:
+          type: object
+          required:
+            - OrderID
+            - Status
+          properties:
+            OrderID:
+              Type: string
+            Status:
+              type: string
+
+  # Deploy all the functions
   OrderEventFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -26,6 +61,17 @@ Resources:
       FunctionName: Order_API_Lambda
       CodeUri: services/functions/order_api
       Handler: order_api_lambda
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: APIGatewayApi
+            Path: /order
+            Method: POST
+            RequestModel:
+              Model: Order
+              Required: true
+              ValidateBody: true
 
   PaymentEventFunction:
     Type: AWS::Serverless::Function
