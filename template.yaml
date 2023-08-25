@@ -79,6 +79,8 @@ Resources:
       Policies:
         - EventBridgePutEventsPolicy:
             EventBusName: !Ref EventBusName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrderTable
       # Environment variables
       Environment:
         Variables:
@@ -107,6 +109,8 @@ Resources:
       Policies:
         - EventBridgePutEventsPolicy:
             EventBusName: !Ref EventBusName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PaymentTable
       # Environment variables
       Environment:
         Variables:
@@ -118,6 +122,9 @@ Resources:
       FunctionName: Order_Event_Lambda
       CodeUri: services/functions/order_event
       Handler: order_event_lambda
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref OrderTable
       Events:
         Trigger:
           Type: EventBridgeRule
@@ -136,6 +143,9 @@ Resources:
       FunctionName: Payment_Event_Lambda
       CodeUri: services/functions/payment_event
       Handler: payment_event_lambda
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PaymentTable
       Events:
         Trigger:
           Type: EventBridgeRule
@@ -147,6 +157,29 @@ Resources:
             RetryPolicy:
               MaximumRetryAttempts: 5
               MaximumEventAgeInSeconds: 120
+
+  # Simple tables in DynamoDB
+  OrderTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: OrderTable
+      PrimaryKey:
+        Name: OrderID
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  PaymentTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: PaymentTable
+      PrimaryKey:
+        Name: PaymentID
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
 Outputs:
   OrderApi:
