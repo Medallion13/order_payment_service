@@ -1,0 +1,17 @@
+{
+  "serverlessConsole.services": [
+    {
+      "type": "cloudformation",
+      "title": "Lambda-tests",
+      "timeOffsetInMs": 0,
+      "awsProfile": "default",
+      "stacks": [
+        {
+          "region": "us-east-1",
+          "stackName": "sam-app",
+          "stage": "dev"
+        }
+      ]
+    }
+  ]
+}
