@@ -31,28 +31,28 @@ Resources:
         Order:
           type: object
           required:
-            - UserID
-            - Item
-            - Quantity
-            - TotalPrice
+            - user_id
+            - item
+            - quantity
+            - total_price
           properties:
-            UserID:
+            user_id:
               type: string
-            Item:
+            item:
               type: string
-            Quantity:
+            quantity:
               type: integer
-            TotalPrice:
+            total_price:
               type: number
         Payment:
           type: object
           required:
-            - OrderID
-            - Status
+            - order_id
+            - status
           properties:
-            OrderID:
+            order_id:
               Type: string
-            Status:
+            status:
               type: string
 
   # Deploy all the functions
