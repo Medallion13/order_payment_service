@@ -9,5 +9,3 @@ require (
 	github.com/aws/smithy-go v1.14.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 )
-
-replace github.com/NicoCodes13/order_payment_service/internal/utils => ./internal/utils
