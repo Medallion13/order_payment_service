@@ -3,5 +3,6 @@ package errors
 import "errors"
 
 var (
-	ErrMarsh = errors.New("problem marshall the body")
+	ErrUnmarsh = errors.New("problem obtain information from the request")
+	ErrMarsh   = errors.New("problem creating the response")
 )

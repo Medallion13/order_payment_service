@@ -2,29 +2,34 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 
 	awsUtils "github.com/NicoCodes13/order_payment_service/internal/aws"
-	data "github.com/NicoCodes13/order_payment_service/internal/utils"
-	internalErrors "github.com/NicoCodes13/order_payment_service/internal/errors"
+	customErr "github.com/NicoCodes13/order_payment_service/internal/errors"
+	utils "github.com/NicoCodes13/order_payment_service/internal/utils"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	var order data.CreateOrderEvent
+	var order_request utils.CreateOrderRequest
+
 	// unserialize the event and save the requiered information in the struc object
-	err := json.Unmarshal([]byte(request.Body), &order)
-	err = nil
+	err := json.Unmarshal([]byte(request.Body), &order_request)
 	if err != nil {
-		return awsUtils.CreateBadResponse("Problem unmarshal the request from the api")
+		return awsUtils.CreateBadResponse("Api Request Error", customErr.ErrMarsh)
+	}
+	// Generate unic ID for the order
+	orderId := utils.GenKey(15, order_request.UserId, order_request.Item, fmt.Sprintln(order_request.TotalPrice), time.Now().String())
+	// Create the body of the response using the struct CreateOrderEvent
+	body, err := json.Marshal(utils.CreateOrderEvent{OrderID: orderId, TotalPrice: order_request.TotalPrice})
+	if err != nil {
+		return awsUtils.CreateBadResponse("API body response Error", customErr.ErrMarsh)
 	}
 
-	body, err := json.Marshal(data.CreateOrderEvent{OrderID: "ramdomId1", TotalPrice: order.TotalPrice})
-	if err != nil {
-		return awsUtils.CreateBadResponse("Problem marshal body response")
-	}
-
-	response = awsUtils.CreateGoodResponse(string(body))
+	// Create the response to make the return to api
+	response := awsUtils.CreateGoodResponse(string(body))
 
 	return response, nil
 }

@@ -20,14 +20,14 @@ func CreateGoodResponse(message string) events.APIGatewayProxyResponse {
 	return response
 }
 
-func CreateBadResponse(err_msg string) (events.APIGatewayProxyResponse, error) {
+func CreateBadResponse(err_name string, err error) (events.APIGatewayProxyResponse, error) {
 	response := events.APIGatewayProxyResponse{
 		Headers: map[string]string{
 			"Content-Type":                 "application/json",
 			"Access-Control-Allow-Methods": "POST",
 		},
 	}
-	body, err := json.Marshal(data.ErrorApiResponse{ErrorName: "LambdaError", Message: err_msg})
+	body, err := json.Marshal(data.ErrorApiResponse{ErrorName: err_name, Message: err.Error()})
 	if err != nil {
 		return response, err
 	}
