@@ -23,3 +23,8 @@ type ProcessPaymentData struct {
 	OrderID string `json:"order_id"`
 	Status  string `json:"status"`
 }
+
+type ErrorApiResponse struct {
+	ErrorName string `json:"error_name"`
+	Message   string `json:"error_message"`
+}
