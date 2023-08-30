@@ -20,7 +20,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	if err != nil {
 		return awsUtils.CreateBadResponse("Api Request Error", customErr.ErrMarsh)
 	}
-	// Generate unic ID for the order
+	// Generate unique ID for the order
 	orderId := utils.GenKey(15, order_request.UserId, order_request.Item, fmt.Sprintln(order_request.TotalPrice), time.Now().String())
 	// Create the body of the response using the struct CreateOrderEvent
 	body, err := json.Marshal(utils.CreateOrderEvent{OrderID: orderId, TotalPrice: order_request.TotalPrice})
