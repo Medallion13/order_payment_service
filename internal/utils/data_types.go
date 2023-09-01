@@ -36,4 +36,5 @@ type OrderTable struct {
 	Quantity     int
 	TotalPrice   int64
 	ReadyForShip bool
+	CreateAt     string
 }

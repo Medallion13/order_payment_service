@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	awsUtils "github.com/NicoCodes13/order_payment_service/internal/aws"
@@ -11,6 +12,12 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
+
+var Table_name string
+
+func init() {
+	Table_name = os.Getenv("TABLE_ORDER")
+}
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	var order_request utils.CreateOrderRequest
@@ -33,19 +40,34 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	// Create the response to make the return to api
 	response := awsUtils.CreateGoodResponse(string(body))
 
+	dynamo, err := awsUtils.DynamoClient(Table_name)
+	if err != nil {
+		return awsUtils.CreateBadResponse("Dynamo Error", err)
+	}
+
+	info := utils.OrderTable{
+		OrderID:      "8e025f077cbd658",
+		UserID:       "Pedrito Cara floja",
+		Item:         order_request.Item,
+		TotalPrice:   order_request.TotalPrice,
+		ReadyForShip: false,
+		Quantity:     order_request.Quantity,
+	}
+
+	dynamo.UpdateInfo(Table_name, "OrderID", info)
+
+	// if err != nil {
+	// 	return awsUtils.CreateBadResponse("Dynamo Error", err)
+	// }
+
+	// dynamo.UpdateInfo()
+
 	// TEsting table
 	// dynamo, err := awsUtils.DynamoClient(os.Getenv("TABLE_ORDER"))
 	// if err != nil {
 	// 	return awsUtils.CreateBadResponse("Dynamo Error", err)
 	// }
 	// Creating a item
-	// info := utils.OrderTable{
-	// 	OrderID:      orderId,
-	// 	UserID:       order_request.UserId,
-	// 	Item:         order_request.Item,
-	// 	TotalPrice:   order_request.TotalPrice,
-	// 	ReadyForShip: false,
-	// }
 
 	// dynamo.AddInfo(info)
 
