@@ -28,3 +28,12 @@ type ErrorApiResponse struct {
 	ErrorName string `json:"error_name"`
 	Message   string `json:"error_message"`
 }
+
+type OrderTable struct {
+	OrderID      string
+	UserID       string
+	Item         string
+	Quantity     int
+	TotalPrice   int64
+	ReadyForShip bool
+}

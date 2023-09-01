@@ -85,6 +85,7 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref EventBusName
+          TABLE_ORDER: !Ref OrderTable
 
   PaymentApiFunction:
     Type: AWS::Serverless::Function
@@ -115,6 +116,7 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref EventBusName
+          TABLE_Payment: !Ref PaymentTable
 
   OrderEventFunction:
     Type: AWS::Serverless::Function
@@ -136,6 +138,10 @@ Resources:
             RetryPolicy:
               MaximumRetryAttempts: 5
               MaximumEventAgeInSeconds: 120
+      # Environment variables
+      Environment:
+        Variables:
+          TABLE_ORDER: !Ref OrderTable
 
   PaymentEventFunction:
     Type: AWS::Serverless::Function
@@ -157,6 +163,10 @@ Resources:
             RetryPolicy:
               MaximumRetryAttempts: 5
               MaximumEventAgeInSeconds: 120
+      # Environment variables
+      Environment:
+        Variables:
+          TABLE_ORDER: !Ref PaymentTable
 
   # Simple tables in DynamoDB
   OrderTable:
@@ -175,7 +185,7 @@ Resources:
     Properties:
       TableName: PaymentTable
       PrimaryKey:
-        Name: PaymentID
+        Name: OrderID
         Type: String
       ProvisionedThroughput:
         ReadCapacityUnits: 5

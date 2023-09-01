@@ -33,6 +33,22 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	// Create the response to make the return to api
 	response := awsUtils.CreateGoodResponse(string(body))
 
+	// TEsting table
+	// dynamo, err := awsUtils.DynamoClient(os.Getenv("TABLE_ORDER"))
+	// if err != nil {
+	// 	return awsUtils.CreateBadResponse("Dynamo Error", err)
+	// }
+	// Creating a item
+	// info := utils.OrderTable{
+	// 	OrderID:      orderId,
+	// 	UserID:       order_request.UserId,
+	// 	Item:         order_request.Item,
+	// 	TotalPrice:   order_request.TotalPrice,
+	// 	ReadyForShip: false,
+	// }
+
+	// dynamo.AddInfo(info)
+
 	return response, nil
 }
 
