@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchevents/types"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
 	customErr "github.com/NicoCodes13/order_payment_service/internal/errors"
 )
@@ -74,38 +74,59 @@ func (table TableBasics) UpdateInfo(tableName string, keyName string, info inter
 	// transform the info into map[string]interface{}
 	infoMap, err := attributevalue.MarshalMap(info)
 	if err != nil {
+		fmt.Println("soy el error 1")
 		return customErr.ErrMarsh
 	}
+	// Obtein the key value
+	key := infoMap[keyName]
+	fmt.Println(infoMap[keyName])
+
+	var some expression.UpdateBuilder
 
 	// Contrut de update builder to send the update information
-	updateBuilder := expression.NewBuilder()
 	for attrName := range infoMap {
-		updateBuilder = updateBuilder.WithUpdate(
-			expression.Set(expression.Name(attrName), expression.Value(infoMap[attrName])),
-		)
+		if attrName != keyName && attrName != "CreateAt" {
+			some.Set(expression.Name(attrName), expression.Value(infoMap[attrName]))
+			a, b := infoMap[attrName]
+			fmt.Println(attrName)
+			fmt.Println(infoMap[attrName])
+			fmt.Println(a)
+			fmt.Println(b)
+			fmt.Printf("Type of value: %T\n", infoMap[attrName])
+		} else {
+			fmt.Printf("Skipping update for attribute: %s\n", attrName)
+		}
 	}
+	some.Set(expression.Name("UpdateAt"), expression.Value(time.Now().Format(time.RFC822)))
 
-	updateBuilder = updateBuilder.WithUpdate(
-		expression.Set(expression.Name("UpdateAt"), expression.Value(time.Now().Format(time.RFC822))),
-	)
+	fmt.Printf("Type of some: %T ", some)
+
+	// updateBuilder = updateBuilder.WithUpdate(some)
+	// updateBuilder = updateBuilder.WithUpdate(
+	// )
 
 	// Building the updete objet to the request to Dynamo
-	update, err := updateBuilder.Build()
+	update, err := expression.NewBuilder().WithUpdate(some).Build()
 	if err != nil {
+		fmt.Println(fmt.Sprintf("Error: %s", err))
 		return customErr.ErrBuildingExpression
 	}
 
-	fmt.Print(update)
-
-	// Define the key condition
-
-	// // Define the update input parameters
-	// updateInput := &dynamodb.UpdateItemInput{
+	// updateInput := dynamodb.UpdateItemInput{
 	// 	TableName: aws.String(tableName),
-	// 	Key: map,
+	// 	Key: map[string]types.AttributeValue{
+	// 		keyName: key,
+	// 	},
+	// 	UpdateExpression:          update.Update(),
+	// 	ExpressionAttributeNames:  update.Names(),
+	// 	ExpressionAttributeValues: update.Values(),
 	// }
 
-	// var response *dynamodb.UpdateItemOutput
-	// var attributes map[string]map[string]interface{}
+	fmt.Printf("Length: %v\n", len(update.Names()))
+	for key, value := range update.Names() {
+		fmt.Printf("%s: %v\n", key, value)
+	}
+	fmt.Println(key)
+
 	return nil
 }
