@@ -46,13 +46,16 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	}
 
 	updateInfo := utils.OrderTable{
-		OrderID:  "8e025f077cbd658",
-		UserID:   "Nicolas",
-		Item:     "Pollo",
-		Quantity: 3,
+		OrderID:    order_request.UserId,
+		Item:       order_request.Item,
+		Quantity:   order_request.Quantity,
+		TotalPrice: order_request.TotalPrice,
 	}
 
-	dynamo.UpdateInfo(Table_name, "OrderID", updateInfo)
+	err = dynamo.UpdateInfo(Table_name, "OrderID", updateInfo)
+	if err != nil {
+		return awsUtils.CreateBadResponse("DynamoDB", customErr.ErrUpdateDynamo)
+	}
 
 	return response, nil
 }

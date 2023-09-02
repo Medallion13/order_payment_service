@@ -7,4 +7,5 @@ var (
 	ErrMarsh              = errors.New("problem creating the response")
 	ErrAPIClient          = errors.New("problem creating dynamo client")
 	ErrBuildingExpression = errors.New("occurs an error building the expresion for update")
+	ErrUpdateDynamo       = errors.New("an error occurred updating the values")
 )

@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 
 	customErr "github.com/NicoCodes13/order_payment_service/internal/errors"
 	"github.com/NicoCodes13/order_payment_service/internal/utils"
@@ -68,59 +68,12 @@ func (table TableBasics) PutInfo(info interface{}) error {
 	})
 	if err != nil {
 		log.Printf("couldn't add item to table. Here's why: %v\n", err)
+		return err
 	}
 	return err
 }
 
 func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo interface{}) error {
-
-	//! old
-	// Obtein the key value
-	// key := infoMap[keyName]
-	// fmt.Println(infoMap[keyName])
-
-	// var some expression.updateder
-
-	// // Contrut de update builder to send the update information
-	// for attrName := range infoMap {
-	// 	if attrName != keyName && attrName != "CreateAt" {
-	// 		some.Set(expression.Name(attrName), expression.Value(infoMap[attrName]))
-	// 		a, b := infoMap[attrName]
-	// 		fmt.Println(attrName)
-	// 		fmt.Println(infoMap[attrName])
-	// 		fmt.Println(a)
-	// 		fmt.Println(b)
-	// 		fmt.Printf("Type of value: %T\n", infoMap[attrName])
-	// 	} else {
-	// 		fmt.Printf("Skipping update for attribute: %s\n", attrName)
-	// 	}
-	// }
-	// some.Set(expression.Name("UpdateAt"), expression.Value(time.Now().Format(time.RFC822)))
-
-	// fmt.Printf("Type of some: %T ", some)
-
-	// updateBuilder = updateBuilder.WithUpdate(some)
-	// updateBuilder = updateBuilder.WithUpdate(
-	// )
-
-	// Building the updete objet to the request to Dynamo
-	// update, err := expression.NewBuilder().WithUpdate(some).Build()
-	// if err != nil {
-	// 	fmt.Println(fmt.Sprintf("Error: %s", err))
-	// 	return customErr.ErrBuildingExpression
-	// }
-
-	// updateInput := dynamodb.UpdateItemInput{
-	// 	TableName: aws.String(tableName),
-	// 	Key: map[string]types.AttributeValue{
-	// 		keyName: key,
-	// 	},
-	// 	UpdateExpression:          update.Update(),
-	// 	ExpressionAttributeNames:  update.Names(),
-	// 	ExpressionAttributeValues: update.Values(),
-	// }
-
-	//! actual
 	// convert the struct into a map to have access to all values
 	upInfoMap, err := StructToMap(upInfo)
 	if err != nil {
@@ -133,37 +86,59 @@ func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo int
 	// create a expression builder object to construct the update object
 	update := expression.Set(expression.Name("UpdateAt"), expression.Value(time.Now().Format(time.RFC822)))
 
+	// it goes through the object and stores the names and values
+	// leaving out the empty ones and the key
 	for mapKey, mapValue := range upInfoMap {
 
 		if mapKey != keyName && mapKey != "CreateAt" && !utils.IsEmpty(mapValue) {
-			update.Set(expression.Name(mapKey), expression.Value(fmt.Sprint(mapValue)))
+			update.Set(expression.Name(mapKey), expression.Value(mapValue))
 		}
 	}
+	// Condition to prevent creation of new records
+	condition := expression.Name(keyName).Equal(expression.Value(&types.AttributeValueMemberS{
+		Value: fmt.Sprint(keyvalue),
+	}))
 
-	fmt.Println(update)
-
-	expr, err := expression.NewBuilder().WithUpdate(update).Build()
+	// Building the expretion to construct te object to update
+	expr, err := expression.NewBuilder().WithUpdate(update).WithCondition(condition).Build()
 	if err != nil {
+		log.Println(err)
 		return customErr.ErrBuildingExpression
 	}
 
-	fmt.Printf("Length: %v\n", len(expr.Names()))
-	for key, value := range expr.Names() {
-		fmt.Printf("%s: %v\n", key, value)
-	}
-
+	// Object to make the input process
 	updateInput := dynamodb.UpdateItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]types.AttributeValue{
 			keyName: &types.AttributeValueMemberS{Value: fmt.Sprint(keyvalue)},
 		},
-		UpdateExpression:         expr.Update(),
-		ExpressionAttributeNames: expr.Names(),
+		UpdateExpression:          expr.Update(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		ConditionExpression:       expr.Condition(),
+	}
+
+	// Making an update of the information
+	out, err := table.DynamoClient.UpdateItem(context.TODO(), &updateInput)
+
+	if err != nil {
+		log.Printf("Couldn't update\n %v", err)
+		return customErr.ErrUpdateDynamo
+	}
+
+	// Print the response's attributes
+	if len(out.Attributes) > 0 {
+		for attributeName, attributeValue := range out.Attributes {
+			fmt.Printf("%s: %v\n", attributeName, attributeValue)
+		}
+	} else {
+		fmt.Println("No attributes returned in the response.")
 	}
 
 	return nil
 }
 
+// Utility to convert struct data types to maps
 func StructToMap(obj interface{}) (newMap map[string]interface{}, err error) {
 	data, err := json.Marshal(obj) // Convert to a json string
 
