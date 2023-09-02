@@ -40,6 +40,20 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	// Create the response to make the return to api
 	response := awsUtils.CreateGoodResponse(string(body))
 
+	dynamo, err := awsUtils.DynamoClient(Table_name)
+	if err != nil {
+		return awsUtils.CreateBadResponse("API body response Error", customErr.ErrAPIClient)
+	}
+
+	updateInfo := utils.OrderTable{
+		OrderID:  "8e025f077cbd658",
+		UserID:   "Nicolas",
+		Item:     "Pollo",
+		Quantity: 3,
+	}
+
+	dynamo.UpdateInfo(Table_name, "OrderID", updateInfo)
+
 	return response, nil
 }
 
