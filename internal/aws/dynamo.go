@@ -2,7 +2,6 @@ package aws
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -75,7 +74,7 @@ func (table TableBasics) PutInfo(info interface{}) error {
 
 func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo interface{}) error {
 	// convert the struct into a map to have access to all values
-	upInfoMap, err := StructToMap(upInfo)
+	upInfoMap, err := utils.StructToMap(upInfo)
 	if err != nil {
 		return err
 	}
@@ -136,16 +135,4 @@ func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo int
 	}
 
 	return nil
-}
-
-// Utility to convert struct data types to maps
-func StructToMap(obj interface{}) (newMap map[string]interface{}, err error) {
-	data, err := json.Marshal(obj) // Convert to a json string
-
-	if err != nil {
-		return
-	}
-
-	err = json.Unmarshal(data, &newMap) // Convert to a map
-	return
 }

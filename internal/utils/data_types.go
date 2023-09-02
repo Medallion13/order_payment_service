@@ -38,32 +38,3 @@ type OrderTable struct {
 	ReadyForShip bool
 	CreateAt     string
 }
-
-func IsEmpty(value interface{}) bool {
-	switch v := value.(type) {
-	case int:
-		return v == 0
-	case int64:
-		return v == 0
-	case int16:
-		return v == 0
-	case int32:
-		return v == 0
-	case float32:
-		return v == 0.0
-	case float64:
-		return v == 0.0
-	case string:
-		return v == ""
-	case []int:
-		return len(v) == 0
-	case map[string]int:
-		return len(v) == 0
-	case bool:
-		return !v
-	case nil:
-		return true
-	default:
-		return false
-	}
-}
