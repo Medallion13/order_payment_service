@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -23,31 +22,49 @@ func init() {
 }
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	var order_request utils.CreateOrderRequest
+	// Create util variables
+	var orderRequest utils.CreateOrderRequest
 
-	// unserialize the event and save the requiered information in the struc object
-	err := json.Unmarshal([]byte(request.Body), &order_request)
+	// Inicialize event bridge and Dynamo clients
+	dynamo, err := awsUtils.DynamoClient(Table_name)
 	if err != nil {
-		return awsUtils.CreateBadResponse("Api Request Error", customErr.ErrMarsh)
+		awsUtils.CreateBadResponse("Dynamo error", err)
 	}
-
-	// Generate unique ID for the order
-	orderId := utils.GenKey(15, order_request.UserId, order_request.Item,
-		fmt.Sprintln(order_request.TotalPrice), time.Now().String())
-
-	// Create the event for eventBridge
-	event := utils.CreateOrderEvent{
-		OrderID:    orderId,
-		TotalPrice: order_request.TotalPrice,
-	}
-
-	log.Println(Event_bus_name)
-	// Send the event
 	bridge, err := awsUtils.EventManager(Event_bus_name)
 	if err != nil {
 		awsUtils.CreateBadResponse("Event Bridge Error", err)
 	}
 
+	// unserialize the event and save the requiered information in the struc object
+	err = json.Unmarshal([]byte(request.Body), &orderRequest)
+	if err != nil {
+		return awsUtils.CreateBadResponse("Api Request Error", customErr.ErrMarsh)
+	}
+
+	// Generate unique ID for the order
+	orderId := utils.GenKey(15, orderRequest.UserId, orderRequest.Item,
+		fmt.Sprintln(orderRequest.TotalPrice), time.Now().String())
+
+	// Create the event for eventBridge and for response
+	event := utils.CreateOrderEvent{
+		OrderID:    orderId,
+		TotalPrice: orderRequest.TotalPrice,
+	}
+
+	// Create and put the item in dynamoDB
+	err = dynamo.PutItem(utils.OrderTable{
+		OrderID:      orderId,
+		UserID:       orderRequest.UserId,
+		Item:         orderRequest.Item,
+		Quantity:     orderRequest.Quantity,
+		TotalPrice:   orderRequest.TotalPrice,
+		ReadyForShip: false,
+	})
+	if err != nil {
+		awsUtils.CreateBadResponse("Dynamo error", err)
+	}
+
+	// Send the event
 	err = bridge.SendEvent("custom.OrderApiFunction", "create_payment", event)
 	if err != nil {
 		awsUtils.CreateBadResponse("Event Bridge Error", err)
