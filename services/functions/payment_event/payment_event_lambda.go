@@ -1,11 +1,19 @@
 package main
 
-import "github.com/aws/aws-lambda-go/lambda"
+import (
+	"fmt"
 
-func hello() (string, error) {
-	return "hello λ!, im the payment event", nil
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/davecgh/go-spew/spew"
+)
+
+func handler(request events.CloudWatchEvent) error {
+	fmt.Printf("Received event of type %q\n", request.DetailType)
+	spew.Dump(request)
+	return nil
 }
 
 func main() {
-	lambda.Start(hello)
+	lambda.Start(handler)
 }

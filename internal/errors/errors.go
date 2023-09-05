@@ -8,4 +8,6 @@ var (
 	ErrAPIClient          = errors.New("problem creating dynamo client")
 	ErrBuildingExpression = errors.New("occurs an error building the expresion for update")
 	ErrUpdateDynamo       = errors.New("an error occurred updating the values")
+	ErrEventBridgeClient  = errors.New("problems creating event bridge client")
+	ErrEventBrigePutEvent = errors.New("an error ocurred putting the event")
 )

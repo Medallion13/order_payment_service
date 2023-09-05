@@ -37,26 +37,22 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		return awsUtils.CreateBadResponse("API body response Error", customErr.ErrMarsh)
 	}
 
+	// Create the event
+	event := utils.CreateOrderEvent{OrderID: orderId, TotalPrice: order_request.TotalPrice}
+
+	// Send the event
+	bridge, err := awsUtils.EventManager("default")
+	if err != nil {
+		awsUtils.CreateBadResponse("Event Bridge Error", err)
+	}
+
+	err = bridge.SendEvent("custom.OrderApiFunction", event)
+	if err != nil {
+		awsUtils.CreateBadResponse("Event Bridge Error", err)
+	}
+
 	// Create the response to make the return to api
 	response := awsUtils.CreateGoodResponse(string(body))
-
-	dynamo, err := awsUtils.DynamoClient(Table_name)
-	if err != nil {
-		return awsUtils.CreateBadResponse("API body response Error", customErr.ErrAPIClient)
-	}
-
-	updateInfo := utils.OrderTable{
-		OrderID:    order_request.UserId,
-		Item:       order_request.Item,
-		Quantity:   order_request.Quantity,
-		TotalPrice: order_request.TotalPrice,
-	}
-
-	err = dynamo.UpdateInfo(Table_name, "OrderID", updateInfo)
-	if err != nil {
-		return awsUtils.CreateBadResponse("DynamoDB", customErr.ErrUpdateDynamo)
-	}
-
 	return response, nil
 }
 

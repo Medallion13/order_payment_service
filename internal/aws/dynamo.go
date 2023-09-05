@@ -55,12 +55,14 @@ func (basics TableBasics) TableExists() (bool, error) {
 }
 
 // Creating a new item in the table
-func (table TableBasics) PutInfo(info interface{}) error {
+func (table TableBasics) PutItem(info interface{}) error {
 	// transform the info into map[string]interface{}
 	item, err := attributevalue.MarshalMap(info)
 	if err != nil {
 		return customErr.ErrMarsh
 	}
+
+	// Send the information to create a new item in the table
 	_, err = table.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String(table.TableName),
 		Item:      item,
@@ -72,6 +74,7 @@ func (table TableBasics) PutInfo(info interface{}) error {
 	return err
 }
 
+// Update a exist item in the dynamo table
 func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo interface{}) error {
 	// convert the struct into a map to have access to all values
 	upInfoMap, err := utils.StructToMap(upInfo)
@@ -115,6 +118,7 @@ func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo int
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 		ConditionExpression:       expr.Condition(),
+		ReturnValues:              types.ReturnValueUpdatedNew,
 	}
 
 	// Making an update of the information
@@ -127,11 +131,12 @@ func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo int
 
 	// Print the response's attributes
 	if len(out.Attributes) > 0 {
+		log.Println("Updated Values: ")
 		for attributeName, attributeValue := range out.Attributes {
-			fmt.Printf("%s: %v\n", attributeName, attributeValue)
+			log.Printf("%s: %v\n", attributeName, attributeValue)
 		}
 	} else {
-		fmt.Println("No attributes returned in the response.")
+		log.Println("No attributes returned in the response.")
 	}
 
 	return nil
