@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"strings"
 
@@ -35,7 +34,6 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	payment_request.Status = validation(payment_request.Status)
 
 	// Inicialize event bridge and Dynamo clients
-	log.Println(Table_name)
 	dynamo, err := awsUtils.DynamoClient(Table_name)
 	if err != nil {
 		return awsUtils.CreateBadResponse("Dynamo error", err)
