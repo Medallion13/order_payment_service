@@ -75,7 +75,7 @@ func (table TableBasics) PutItem(info interface{}) error {
 }
 
 // Update a exist item in the dynamo table
-func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo interface{}) error {
+func (table TableBasics) UpdateInfo(keyName string, upInfo interface{}) error {
 	// convert the struct into a map to have access to all values
 	upInfoMap, err := utils.StructToMap(upInfo)
 	if err != nil {
@@ -110,7 +110,7 @@ func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo int
 
 	// Object to make the input process
 	updateInput := dynamodb.UpdateItemInput{
-		TableName: aws.String(tableName),
+		TableName: aws.String(table.TableName),
 		Key: map[string]types.AttributeValue{
 			keyName: &types.AttributeValueMemberS{Value: fmt.Sprint(keyvalue)},
 		},
@@ -123,7 +123,6 @@ func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo int
 
 	// Making an update of the information
 	out, err := table.DynamoClient.UpdateItem(context.TODO(), &updateInput)
-
 	if err != nil {
 		log.Printf("Couldn't update\n %v", err)
 		return customErr.ErrUpdateDynamo
@@ -139,5 +138,24 @@ func (table TableBasics) UpdateInfo(tableName string, keyName string, upInfo int
 		log.Println("No attributes returned in the response.")
 	}
 
+	return nil
+}
+
+// Get item
+func (table TableBasics) GetItem(keyName string, keyValue string, out interface{}) error {
+	response, err := table.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: &table.TableName,
+		Key: map[string]types.AttributeValue{
+			keyName: &types.AttributeValueMemberS{Value: keyValue},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = attributevalue.UnmarshalMap(response.Item, &out)
+	if err != nil {
+		return err
+	}
 	return nil
 }

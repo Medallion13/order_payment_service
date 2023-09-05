@@ -28,11 +28,11 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	// Inicialize event bridge and Dynamo clients
 	dynamo, err := awsUtils.DynamoClient(Table_name)
 	if err != nil {
-		awsUtils.CreateBadResponse("Dynamo error", err)
+		return awsUtils.CreateBadResponse("Dynamo error", err)
 	}
 	bridge, err := awsUtils.EventManager(Event_bus_name)
 	if err != nil {
-		awsUtils.CreateBadResponse("Event Bridge Error", err)
+		return awsUtils.CreateBadResponse("Event Bridge Error", err)
 	}
 
 	// unserialize the event and save the requiered information in the struc object
@@ -59,15 +59,16 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		Quantity:     orderRequest.Quantity,
 		TotalPrice:   orderRequest.TotalPrice,
 		ReadyForShip: false,
+		CreateAt:     time.Now().Format(time.RFC822),
 	})
 	if err != nil {
-		awsUtils.CreateBadResponse("Dynamo error", err)
+		return awsUtils.CreateBadResponse("Dynamo error", err)
 	}
 
 	// Send the event
 	err = bridge.SendEvent("custom.OrderApiFunction", "OrderCreated", event)
 	if err != nil {
-		awsUtils.CreateBadResponse("Event Bridge Error", err)
+		return awsUtils.CreateBadResponse("Event Bridge Error", err)
 	}
 
 	// Create the response to make the return to api

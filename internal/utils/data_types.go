@@ -38,3 +38,7 @@ type OrderTable struct {
 	ReadyForShip bool
 	CreateAt     string
 }
+type PaymentTable struct {
+	OrderID       string
+	PaymentStatus string
+}

@@ -38,7 +38,7 @@ func CreateBadResponse(err_name string, err error) (events.APIGatewayProxyRespon
 		return response, err
 	}
 
-	response.StatusCode = http.StatusBadRequest
+	response.StatusCode = http.StatusInternalServerError
 	response.Body = string(body)
 	return response, nil
 }
