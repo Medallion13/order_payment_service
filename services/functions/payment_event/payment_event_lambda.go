@@ -2,22 +2,45 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
+	"os"
 
-	"github.com/NicoCodes13/order_payment_service/internal/utils"
+	awsUtils "github.com/NicoCodes13/order_payment_service/internal/aws"
+	custErr "github.com/NicoCodes13/order_payment_service/internal/errors"
+	utils "github.com/NicoCodes13/order_payment_service/internal/utils"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/davecgh/go-spew/spew"
 )
 
+var Table_name string
+
+func init() {
+	Table_name = os.Getenv("TABLE_ORDER")
+}
+
 func handler(request events.CloudWatchEvent) error {
+	// Util variables
 	var orderEvent utils.CreateOrderEvent
-	fmt.Printf("Received event of type %q\n", request.DetailType)
+
+	// Information for log
+	log.Printf("Received event of type %q\n", request.DetailType)
+
+	// Unmarsh the request to access the data
 	err := json.Unmarshal([]byte(request.Detail), &orderEvent)
+	if err != nil {
+		return custErr.ErrUnmarsh
+	}
+
+	dynamo, err := awsUtils.DynamoClient(Table_name)
 	if err != nil {
 		return err
 	}
-	spew.Dump(orderEvent)
+
+	dynamo.PutItem(utils.PaymentTable{
+		OrderID:       orderEvent.OrderID,
+		PaymentStatus: "incomplete",
+	})
+
 	return nil
 }
 
