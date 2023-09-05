@@ -8,7 +8,13 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 )
 
-func CreateGoodResponse(message string) events.APIGatewayProxyResponse {
+func CreateGoodResponse(message interface{}) events.APIGatewayProxyResponse {
+	// Transform message into json to send in the response of the API
+	msg, err := json.Marshal(message)
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: 500, Body: err.Error()}
+	}
+
 	response := events.APIGatewayProxyResponse{
 		Headers: map[string]string{
 			"Content-Type":                 "application/json",
@@ -16,7 +22,7 @@ func CreateGoodResponse(message string) events.APIGatewayProxyResponse {
 		},
 	}
 	response.StatusCode = http.StatusOK
-	response.Body = message
+	response.Body = string(msg)
 	return response
 }
 

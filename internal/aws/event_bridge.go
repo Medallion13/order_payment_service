@@ -29,7 +29,7 @@ func EventManager(busName string) (BridgeBasic, error) {
 }
 
 // Send a new event
-func (bridge BridgeBasic) SendEvent(source string, message interface{}) error {
+func (bridge BridgeBasic) SendEvent(source string, eventType string, message interface{}) error {
 	// Marshall the message to send into eventBridge
 	msg, err := json.Marshal(message)
 	if err != nil {
@@ -43,7 +43,7 @@ func (bridge BridgeBasic) SendEvent(source string, message interface{}) error {
 					EventBusName: aws.String(bridge.BusName),
 					Source:       aws.String(source),
 
-					DetailType: aws.String("test"),
+					DetailType: aws.String(eventType),
 					Detail:     aws.String(string(msg)),
 				},
 			},
