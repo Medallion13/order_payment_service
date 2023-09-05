@@ -65,7 +65,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	}
 
 	// Send the event
-	err = bridge.SendEvent("custom.OrderApiFunction", "create_payment", event)
+	err = bridge.SendEvent("custom.OrderApiFunction", "OrderCreated", event)
 	if err != nil {
 		awsUtils.CreateBadResponse("Event Bridge Error", err)
 	}
