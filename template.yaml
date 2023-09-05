@@ -31,28 +31,28 @@ Resources:
         Order:
           type: object
           required:
-            - UserID
-            - Item
-            - Quantity
-            - TotalPrice
+            - user_id
+            - item
+            - quantity
+            - total_price
           properties:
-            UserID:
+            user_id:
               type: string
-            Item:
+            item:
               type: string
-            Quantity:
+            quantity:
               type: integer
-            TotalPrice:
+            total_price:
               type: number
         Payment:
           type: object
           required:
-            - OrderID
-            - Status
+            - order_id
+            - status
           properties:
-            OrderID:
+            order_id:
               Type: string
-            Status:
+            status:
               type: string
 
   # Deploy all the functions
@@ -85,6 +85,7 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref EventBusName
+          TABLE_NAME: !Ref OrderTable
 
   PaymentApiFunction:
     Type: AWS::Serverless::Function
@@ -115,6 +116,7 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref EventBusName
+          TABLE_NAME: !Ref PaymentTable
 
   OrderEventFunction:
     Type: AWS::Serverless::Function
@@ -136,6 +138,10 @@ Resources:
             RetryPolicy:
               MaximumRetryAttempts: 5
               MaximumEventAgeInSeconds: 120
+      # Environment variables
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref OrderTable
 
   PaymentEventFunction:
     Type: AWS::Serverless::Function
@@ -157,6 +163,10 @@ Resources:
             RetryPolicy:
               MaximumRetryAttempts: 5
               MaximumEventAgeInSeconds: 120
+      # Environment variables
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref PaymentTable
 
   # Simple tables in DynamoDB
   OrderTable:
@@ -175,7 +185,7 @@ Resources:
     Properties:
       TableName: PaymentTable
       PrimaryKey:
-        Name: PaymentID
+        Name: OrderID
         Type: String
       ProvisionedThroughput:
         ReadCapacityUnits: 5
