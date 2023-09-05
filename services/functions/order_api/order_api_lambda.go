@@ -17,7 +17,7 @@ var Table_name string
 var Event_bus_name string
 
 func init() {
-	Table_name = os.Getenv("TABLE_ORDER")
+	Table_name = os.Getenv("TABLE_NAME")
 	Event_bus_name = os.Getenv("EVENT_BUS_NAME")
 }
 

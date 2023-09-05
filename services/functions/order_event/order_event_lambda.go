@@ -15,7 +15,7 @@ import (
 var Table_name string
 
 func init() {
-	Table_name = os.Getenv("TABLE_ORDER")
+	Table_name = os.Getenv("TABLE_NAME")
 }
 
 func handler(request events.CloudWatchEvent) error {

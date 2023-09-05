@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"os"
 	"strings"
 
@@ -17,7 +18,7 @@ var Table_name string
 var Event_bus_name string
 
 func init() {
-	Table_name = os.Getenv("TABLE_ORDER")
+	Table_name = os.Getenv("TABLE_NAME")
 	Event_bus_name = os.Getenv("EVENT_BUS_NAME")
 }
 
@@ -34,6 +35,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	payment_request.Status = validation(payment_request.Status)
 
 	// Inicialize event bridge and Dynamo clients
+	log.Println(Table_name)
 	dynamo, err := awsUtils.DynamoClient(Table_name)
 	if err != nil {
 		return awsUtils.CreateBadResponse("Dynamo error", err)

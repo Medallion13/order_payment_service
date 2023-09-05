@@ -85,7 +85,7 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref EventBusName
-          TABLE_ORDER: !Ref OrderTable
+          TABLE_NAME: !Ref OrderTable
 
   PaymentApiFunction:
     Type: AWS::Serverless::Function
@@ -116,7 +116,7 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref EventBusName
-          TABLE_Payment: !Ref PaymentTable
+          TABLE_NAME: !Ref PaymentTable
 
   OrderEventFunction:
     Type: AWS::Serverless::Function
@@ -141,7 +141,7 @@ Resources:
       # Environment variables
       Environment:
         Variables:
-          TABLE_ORDER: !Ref OrderTable
+          TABLE_NAME: !Ref OrderTable
 
   PaymentEventFunction:
     Type: AWS::Serverless::Function
@@ -166,7 +166,7 @@ Resources:
       # Environment variables
       Environment:
         Variables:
-          TABLE_ORDER: !Ref PaymentTable
+          TABLE_NAME: !Ref PaymentTable
 
   # Simple tables in DynamoDB
   OrderTable:
